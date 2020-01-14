@@ -1,0 +1,11 @@
+Select e.employee_name, e.employee_type, s.basic_salary, s.house_rent, s.medical, s.transport, s.vat, noa.total_working_day, nop.no_of_present, ot.over_time, lt.late_time, (ot.over_time - lt.late_time) AS total_over_time, ((((s.basic_salary/noa.total_working_day)/9)/60) * (ot.over_time - lt.late_time)) as total_over_time_salary, (((((s.basic_salary/noa.total_working_day)/9)/60) * (ot.over_time - lt.late_time)) + s.total_salary) AS total_payable_salary
+FROM employee_info as e, salary_info as s, attendance_info as a, 
+(SELECT attendance_info.employee_name, COUNT(weekend) as total_working_day FROM attendance_info WHERE attendance_info.a_date BETWEEN '2018-05-01' and '2018-05-31' AND attendance_info.weekend != 'WeekEnd' GROUP BY attendance_info.employee_name) AS noa,
+(SELECT attendance_info.employee_name, COUNT(on_duty) as no_of_present FROM attendance_info WHERE attendance_info.a_date BETWEEN '2018-05-01' and '2018-05-31' AND attendance_info.on_duty != '' GROUP BY attendance_info.employee_name) as nop,
+(SELECT attendance_info.employee_name, SUM(ot_time) as over_time FROM attendance_info WHERE attendance_info.a_date BETWEEN '2018-05-01' and '2018-05-31' GROUP BY attendance_info.employee_name) AS ot,
+(SELECT attendance_info.employee_name, SUM(late) as late_time FROM attendance_info WHERE attendance_info.a_date BETWEEN '2018-05-01' and '2018-05-31' GROUP BY attendance_info.employee_name) AS lt
+where e.employee_name = s.employee_name
+And e.employee_name = a.employee_name
+AND e.employee_name = noa.employee_name
+AND e.employee_name = nop.employee_name AND e.employee_name = ot.employee_name AND e.employee_name = lt.employee_name
+GROUP BY e.employee_name
